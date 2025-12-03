@@ -14,8 +14,8 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}"
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║          Silverstripe CMS Installer Wrapper                   ║"
-echo "║                    for CMS 6.x                                ║"
+echo "║              Silverstripe CMS Installer Wrapper              ║"
+echo "║                   for latest stable release                  ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
@@ -25,22 +25,40 @@ if ! command -v composer &> /dev/null; then
     exit 1
 fi
 
-# Check if we're in the right directory
-if [ ! -d "$(pwd)" ]; then
-    echo -e "${RED}Error: Invalid directory${NC}"
-    exit 1
-fi
+# Ask for project directory
+echo -e "${BLUE}── Project Directory ──${NC}"
+read -p "Project directory (leave empty to install in current directory): " project_dir
 
-# Check if directory is empty (except for hidden files)
-if [ "$(ls -A 2>/dev/null | grep -v '^\.')" ]; then
-    echo -e "${YELLOW}Warning: Current directory is not empty.${NC}"
-    read -p "Continue anyway? (y/n): " continue_install
-    if [[ ! "$continue_install" =~ ^[Yy]$ ]]; then
-        echo "Installation cancelled."
-        exit 0
+if [ -n "$project_dir" ]; then
+    # Create directory if it doesn't exist
+    if [ -d "$project_dir" ]; then
+        echo -e "${YELLOW}Directory '$project_dir' already exists.${NC}"
+        read -p "Continue anyway? (y/n): " continue_install
+        if [[ ! "$continue_install" =~ ^[Yy]$ ]]; then
+            echo "Installation cancelled."
+            exit 0
+        fi
+    else
+        mkdir -p "$project_dir"
+        echo -e "${GREEN}Created directory: $project_dir${NC}"
+    fi
+    cd "$project_dir"
+    echo -e "Installing in: $(pwd)"
+else
+    echo -e "Installing in current directory: $(pwd)"
+    
+    # Check if directory is empty (except for hidden files)
+    if [ "$(ls -A 2>/dev/null | grep -v '^\.')" ]; then
+        echo -e "${YELLOW}Warning: Current directory is not empty.${NC}"
+        read -p "Continue anyway? (y/n): " continue_install
+        if [[ ! "$continue_install" =~ ^[Yy]$ ]]; then
+            echo "Installation cancelled."
+            exit 0
+        fi
     fi
 fi
 
+echo ""
 echo -e "${GREEN}Step 1: Running Composer create-project...${NC}"
 echo ""
 
@@ -61,23 +79,23 @@ echo ""
 # Database Configuration
 echo -e "${BLUE}── Database Configuration ──${NC}"
 
-read -p "Database Class [MySQLDatabase]: " db_class
+read -p "Database CLASS [MySQLDatabase]: " db_class
 db_class=${db_class:-MySQLDatabase}
 
-read -p "Database Server [localhost]: " db_server
+read -p "Database SERVER [localhost]: " db_server
 db_server=${db_server:-localhost}
 
-read -p "Database Name: " db_name
-while [ -z "$db_name" ]; do
-    echo -e "${RED}Database name is required.${NC}"
-    read -p "Database Name: " db_name
-done
-
-read -p "Database Username [root]: " db_username
+read -p "Database USERNAME [root]: " db_username
 db_username=${db_username:-root}
 
-read -sp "Database Password: " db_password
+read -sp "Database PASSWORD: " db_password
 echo ""
+
+read -p "Database NAME: " db_name
+while [ -z "$db_name" ]; do
+    echo -e "${RED}Database name is required.${NC}"
+    read -p "Database NAME: " db_name
+done
 
 # Admin Configuration
 echo ""
@@ -169,6 +187,7 @@ echo "╚═══════════════════════�
 echo -e "${NC}"
 
 echo -e "Configuration Summary:"
+echo -e "  Project:      $(pwd)"
 echo -e "  Database:     ${db_name}@${db_server}"
 echo -e "  DB User:      ${db_username}"
 echo -e "  Admin User:   ${admin_username}"
