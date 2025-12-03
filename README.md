@@ -7,6 +7,8 @@ A Bash script that runs `composer create-project silverstripe/installer` and the
 - Environment type (dev/test/live)
 - Base URL (optional)
 
+It then creates the `.env` file and removes the `.env.example` that comes with Silverstripe.
+
 ## Requirements
 
 - Bash 4.0+
@@ -16,7 +18,7 @@ A Bash script that runs `composer create-project silverstripe/installer` and the
 ## Installation
 
 ```bash
-curl -o [YOUR_BIN_PATH]/ss-install https://raw.githubusercontent.com/YOUR_USERNAME/silverstripe-installer/main/ss-install.sh
+curl -o [YOUR_BIN_PATH]/ss-install https://raw.githubusercontent.com/prij/silverstripe-installer/main/ss-install.sh
 chmod +x [YOUR_BIN_PATH]/ss-install
 ```
 
