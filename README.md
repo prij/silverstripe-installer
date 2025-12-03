@@ -3,10 +3,9 @@
 A Bash script that runs `composer create-project silverstripe/installer` and then prompts you to configure the `.env` file interactively for the following:
 
 - Project directory (leave empty to install in current directory)
-- Database class, server, name, username, and password
-- Admin username and password
+- Database server, username, password and name
 - Environment type (dev/test/live)
-- Base URL (optional)
+- Admin username and password (optional)
 
 It then creates the `.env` file and removes the `.env.example` that comes with Silverstripe.
 

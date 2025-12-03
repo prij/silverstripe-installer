@@ -79,9 +79,6 @@ echo ""
 # Database Configuration
 echo -e "${BLUE}── Database Configuration ──${NC}"
 
-read -p "Database CLASS [MySQLDatabase]: " db_class
-db_class=${db_class:-MySQLDatabase}
-
 read -p "Database SERVER [localhost]: " db_server
 db_server=${db_server:-localhost}
 
@@ -100,25 +97,47 @@ done
 # Admin Configuration
 echo ""
 echo -e "${BLUE}── Admin Configuration ──${NC}"
+read -p "Would you like to add default admin login details to .env? (y/n) [y]: " setup_admin
+setup_admin=${setup_admin:-y}
 
-read -p "Default Admin Username [admin]: " admin_username
-admin_username=${admin_username:-admin}
+admin_username=""
+admin_password=""
 
-while true; do
-    read -sp "Default Admin Password: " admin_password
-    echo ""
-    if [ -z "$admin_password" ]; then
-        echo -e "${RED}Admin password is required.${NC}"
-        continue
-    fi
-    read -sp "Confirm Admin Password: " admin_password_confirm
-    echo ""
-    if [ "$admin_password" != "$admin_password_confirm" ]; then
-        echo -e "${RED}Passwords do not match. Please try again.${NC}"
-    else
+if [[ "$setup_admin" =~ ^[Yy]$ ]]; then
+    while true; do
+        read -p "Default Admin Username [admin]: " admin_username
+        # If username is empty after choosing "y", treat as "n" / skip admin
+        if [ -z "$admin_username" ]; then
+            echo -e "${YELLOW}No username entered. Skipping default admin setup.${NC}"
+            admin_username=""
+            admin_password=""
+            break
+        fi
+
+        # Apply default if they just press enter
+        admin_username=${admin_username:-admin}
+
+        # Require a non-empty, confirmed password
+        while true; do
+            read -sp "Default Admin Password: " admin_password
+            echo ""
+            if [ -z "$admin_password" ]; then
+                echo -e "${RED}Admin password is required when a username is set.${NC}"
+                continue
+            fi
+            read -sp "Confirm Admin Password: " admin_password_confirm
+            echo ""
+            if [ "$admin_password" != "$admin_password_confirm" ]; then
+                echo -e "${RED}Passwords do not match. Please try again.${NC}"
+            else
+                break
+            fi
+        done
+
         break
-    fi
-done
+    done
+fi
+
 
 # Environment Type
 echo ""
@@ -133,11 +152,6 @@ if [[ ! "$env_type" =~ ^(dev|test|live)$ ]]; then
     env_type="dev"
 fi
 
-# Optional: Base URL
-echo ""
-echo -e "${BLUE}── Optional Settings ──${NC}"
-read -p "Base URL (leave empty to skip): " base_url
-
 # Create .env file
 echo ""
 echo -e "${GREEN}Step 3: Creating .env file...${NC}"
@@ -148,15 +162,23 @@ cat > .env << EOF
 # https://docs.silverstripe.org/en/6/getting_started/environment_management/
 
 # Database Configuration
-SS_DATABASE_CLASS="${db_class}"
 SS_DATABASE_SERVER="${db_server}"
-SS_DATABASE_NAME="${db_name}"
 SS_DATABASE_USERNAME="${db_username}"
 SS_DATABASE_PASSWORD="${db_password}"
+SS_DATABASE_NAME="${db_name}"
+EOF
+
+# Append admin credentials only if provided
+if [[ -n "$admin_username" && -n "$admin_password" ]]; then
+cat >> .env << EOF
 
 # Admin Configuration
 SS_DEFAULT_ADMIN_USERNAME="${admin_username}"
 SS_DEFAULT_ADMIN_PASSWORD="${admin_password}"
+EOF
+fi
+
+cat >> .env << EOF
 
 # Environment Type (dev|test|live)
 SS_ENVIRONMENT_TYPE="${env_type}"
